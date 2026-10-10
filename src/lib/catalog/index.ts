@@ -33,7 +33,7 @@ const META: Record<string, CategoryMeta> = {
 
 const calculatorTools: CategoryData = {
   ...calculators,
-  tools: calculators.tools.filter(
+  tools: (calculators as CategoryData).tools.filter(
     (tool) => tool.slug !== "random-number-generator" && tool.slug !== "tasbih-counter",
   ),
 };
