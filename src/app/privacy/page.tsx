@@ -45,7 +45,7 @@ export default function PrivacyPage() {
         {
           icon: "Globe",
           title: "Preferences and analytics",
-          body: "A locale cookie remembers the language you pick, and sign-in uses a session cookie. Calculator Bazaar does not load third-party advertising or analytics scripts.",
+          body: "A locale cookie remembers the language you pick, and sign-in uses a session cookie. Calculator Bazaar displays ads provided by third-party advertising networks. Those providers may use cookies or similar technologies to deliver or measure ads; their own privacy policies explain how they handle data.",
         },
         {
           icon: "EyeOff",

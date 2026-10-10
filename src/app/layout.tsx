@@ -8,6 +8,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LazyEnhancementsShell } from "@/components/LazyEnhancementsShell";
 import { UsingTheSite } from "@/components/seo/UsingTheSite";
+import { LeaderboardAd, LowerPageAd } from "@/components/ads/SitewideAds";
 import { themeScript } from "@/lib/theme-script";
 import { getLocale } from "@/i18n/locale";
 import { getMessaging } from "@/i18n/messaging";
@@ -106,7 +107,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       </head>
       <body className="flex min-h-full min-w-0 flex-col overflow-x-clip">
         <Header />
+        <LeaderboardAd />
         <main className="min-w-0 flex-1">{children}</main>
+        <LowerPageAd />
         <UsingTheSite />
         <Footer />
         <LazyEnhancementsShell />
