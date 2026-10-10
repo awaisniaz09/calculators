@@ -1,44 +1,105 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 type DisplayAdProps = {
   width: number;
   height: number;
   keyId: string;
 };
 
-const AD_SCRIPT = "https://www.highrevenueformat.com/{key}/invoke.js";
+type AdOptions = {
+  key: string;
+  format: "iframe";
+  height: number;
+  width: number;
+  params: Record<string, never>;
+};
 
-function adDocument({ width, height, keyId }: DisplayAdProps): string {
-  const invokeUrl = AD_SCRIPT.replace("{key}", keyId);
-  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;width:${width}px;height:${height}px;overflow:hidden;background:transparent}</style></head><body><script>window.atOptions={key:"${keyId}",format:"iframe",height:${height},width:${width},params:{}};</script><script src="${invokeUrl}"></script></body></html>`;
+declare global {
+  interface Window {
+    atOptions?: AdOptions;
+  }
 }
 
+const AD_SCRIPT = "https://www.highrevenueformat.com/{key}/invoke.js";
+let adScriptQueue: Promise<void> = Promise.resolve();
+
 function DisplayAd({ width, height, keyId }: DisplayAdProps) {
+  const hostRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
+    let canceled = false;
+    let releaseQueue: (() => void) | undefined;
+    let script: HTMLScriptElement | undefined;
+
+    const task = adScriptQueue.then(() => new Promise<void>((resolve) => {
+      releaseQueue = resolve;
+      if (canceled || !host.isConnected) {
+        resolve();
+        return;
+      }
+
+      window.atOptions = { key: keyId, format: "iframe", height, width, params: {} };
+      script = document.createElement("script");
+      script.async = false;
+      script.src = AD_SCRIPT.replace("{key}", keyId);
+      script.onload = () => resolve();
+      script.onerror = () => resolve();
+      host.append(script);
+    }));
+    adScriptQueue = task.catch(() => undefined);
+
+    return () => {
+      canceled = true;
+      script?.remove();
+      host.replaceChildren();
+      releaseQueue?.();
+    };
+  }, [height, keyId, width]);
+
   return (
-    <iframe
-      title="Advertisement"
-      width={width}
-      height={height}
-      loading="eager"
-      referrerPolicy="strict-origin-when-cross-origin"
-      sandbox="allow-scripts allow-popups allow-forms allow-popups-to-escape-sandbox"
-      srcDoc={adDocument({ width, height, keyId })}
-      className="block max-w-full border-0"
+    <div
+      ref={hostRef}
+      aria-label={`${width} by ${height} advertisement`}
+      className="ad-slot block max-w-full overflow-hidden"
+      style={{ width: `min(100%, ${width}px)`, height }}
     />
   );
 }
 
 export function LeaderboardAd() {
+  const [placement, setPlacement] = useState<DisplayAdProps | null>(null);
+
+  useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 479px)");
+    const tablet = window.matchMedia("(min-width: 480px) and (max-width: 767px)");
+    const updatePlacement = () => {
+      setPlacement(mobile.matches
+        ? { width: 320, height: 50, keyId: "3aeeea01aeed92a50bca3c7113c1ce42" }
+        : tablet.matches
+          ? { width: 468, height: 60, keyId: "a50dd556f6f6c56aa0ef3838b8ef4756" }
+          : { width: 728, height: 90, keyId: "2f1c9d25e05f1384a285f2d71b879850" });
+    };
+
+    updatePlacement();
+    mobile.addEventListener("change", updatePlacement);
+    tablet.addEventListener("change", updatePlacement);
+    return () => {
+      mobile.removeEventListener("change", updatePlacement);
+      tablet.removeEventListener("change", updatePlacement);
+    };
+  }, []);
+
   return (
     <aside aria-label="Advertisement" className="border-b border-border bg-surface px-3 py-3 sm:px-6">
       <div className="mx-auto flex min-h-[74px] max-w-7xl flex-col items-center justify-center gap-1">
         <span className="text-[10px] font-medium text-muted">Advertisement</span>
-        <div className="flex w-full justify-center min-[480px]:hidden">
-          <DisplayAd width={320} height={50} keyId="3aeeea01aeed92a50bca3c7113c1ce42" />
-        </div>
-        <div className="hidden w-full justify-center min-[480px]:flex min-[768px]:hidden">
-          <DisplayAd width={468} height={60} keyId="a50dd556f6f6c56aa0ef3838b8ef4756" />
-        </div>
-        <div className="hidden w-full justify-center min-[768px]:flex">
-          <DisplayAd width={728} height={90} keyId="2f1c9d25e05f1384a285f2d71b879850" />
+        <div className="flex w-full justify-center">
+          {placement && <DisplayAd {...placement} />}
         </div>
       </div>
     </aside>
