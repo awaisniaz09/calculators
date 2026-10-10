@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Geist, Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
 import { site } from "@/lib/site";
@@ -52,6 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: messaging.siteDescription,
     keywords: [...site.keywords],
+    verification: { google: "m6txankn6I7L5LMCwNjZyJshTz-XRVSGhf99aRMlC7U" },
     applicationName: site.name,
     authors: [{ name: site.name }],
     ...socialMeta({
@@ -104,6 +106,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <Script id="google-analytics-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || []; function gtag(){window.dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-CMBFHMQGDY');`}
+        </Script>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-CMBFHMQGDY"
+          strategy="afterInteractive"
+        />
       </head>
       <body className="flex min-h-full min-w-0 flex-col overflow-x-clip">
         <Header />
